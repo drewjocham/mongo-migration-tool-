@@ -1,0 +1,223 @@
+trigger:
+  branches:
+    include:
+    - main
+    - develop
+  paths:
+    include:
+    - tools/mongo-migration-tool/**
+    - scripts/mongo-migration/**
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  # Container Registry
+  containerRegistry: '$(CONTAINER_REGISTRY_CONNECTION)'
+  imageRepository: 'mongo-migration-tool'
+  dockerfilePath: 'tools/mongo-migration-tool/Dockerfile'
+  tag: '$(Build.BuildId)'
+  
+  # Image signing
+  keyVaultName: '$(KEY_VAULT_NAME)'
+  signingKeyName: '$(SIGNING_KEY_NAME)'
+  
+  # Deployment environments
+  isDevelop: $[eq(variables['Build.SourceBranch'], 'refs/heads/develop')]
+  isMain: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
+
+stages:
+- stage: Build
+  displayName: 'Build and Sign Image'
+  jobs:
+  - job: BuildImage
+    displayName: 'Build Migration Tool Image'
+    steps:
+    - checkout: self
+      fetchDepth: 1
+    
+    - task: Docker@2
+      displayName: 'Build Docker image'
+      inputs:
+        containerRegistry: '$(containerRegistry)'
+        repository: '$(imageRepository)'
+        command: 'build'
+        Dockerfile: '$(dockerfilePath)'
+        buildContext: 'tools/mongo-migration-tool'
+        tags: |
+          $(tag)
+          latest
+        arguments: '--build-arg BUILD_VERSION=$(tag)'
+    
+    - task: AzureKeyVault@2
+      displayName: 'Get signing certificate from Key Vault'
+      inputs:
+        azureSubscription: '$(AZURE_SERVICE_CONNECTION)'
+        KeyVaultName: '$(keyVaultName)'
+        SecretsFilter: '$(signingKeyName)'
+        RunAsPreJob: false
+    
+    - task: Docker@2
+      displayName: 'Push Docker image to registry'
+      inputs:
+        containerRegistry: '$(containerRegistry)'
+        repository: '$(imageRepository)'
+        command: 'push'
+        tags: |
+          $(tag)
+          latest
+    
+    # Sign the Docker image using notation and Azure Key Vault
+    - task: AzureCLI@2
+      displayName: 'Sign Docker image'
+      inputs:
+        azureSubscription: '$(AZURE_SERVICE_CONNECTION)'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          set -e
+          
+          echo "Installing notation CLI..."
+          curl -Lo notation.tar.gz https://github.com/notaryproject/notation/releases/download/v1.0.0/notation_1.0.0_linux_amd64.tar.gz
+          tar xvzf notation.tar.gz
+          sudo mv notation /usr/local/bin/
+          
+          echo "Installing Azure Key Vault plugin..."
+          notation plugin install --url https://github.com/Azure/notation-azure-kv/releases/download/v1.0.0/notation-azure-kv_1.0.0_linux_amd64.tar.gz
+          
+          # Configure notation with Azure Key Vault
+          REGISTRY_URL=$(echo "$(containerRegistry)" | sed 's/.*\/\/\([^\/]*\).*/\1/')
+          
+          echo "Configuring notation trust store..."
+          notation cert add --type ca --store "$(signingKeyName)" <(echo "$($(signingKeyName))")
+          
+          echo "Adding signing key from Key Vault..."
+          notation key add --name "$(signingKeyName)" --plugin azure-kv \
+            --id "https://$(keyVaultName).vault.azure.net/keys/$(signingKeyName)"
+          
+          # Sign the image
+          echo "Signing image: $REGISTRY_URL/$(imageRepository):$(tag)"
+          notation sign --key "$(signingKeyName)" "$REGISTRY_URL/$(imageRepository):$(tag)"
+          
+          echo "Signing image: $REGISTRY_URL/$(imageRepository):latest"
+          notation sign --key "$(signingKeyName)" "$REGISTRY_URL/$(imageRepository):latest"
+          
+          echo "Image signing completed successfully"
+    
+    # Verify the signature
+    - task: AzureCLI@2
+      displayName: 'Verify image signature'
+      inputs:
+        azureSubscription: '$(AZURE_SERVICE_CONNECTION)'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          set -e
+          
+          REGISTRY_URL=$(echo "$(containerRegistry)" | sed 's/.*\/\/\([^\/]*\).*/\1/')
+          
+          echo "Verifying signature for: $REGISTRY_URL/$(imageRepository):$(tag)"
+          notation verify "$REGISTRY_URL/$(imageRepository):$(tag)"
+          
+          echo "Verifying signature for: $REGISTRY_URL/$(imageRepository):latest"
+          notation verify "$REGISTRY_URL/$(imageRepository):latest"
+          
+          echo "Image signature verification completed successfully"
+
+- stage: DeployDev
+  displayName: 'Deploy to Development'
+  dependsOn: Build
+  condition: and(succeeded(), eq(variables.isDevelop, true))
+  jobs:
+  - deployment: DeployMigrations
+    displayName: 'Run Migrations in Development'
+    environment: 'development'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+            fetchDepth: 1
+          
+          - task: AzureCLI@2
+            displayName: 'Run Database Migrations'
+            inputs:
+              azureSubscription: '$(AZURE_SERVICE_CONNECTION)'
+              scriptType: 'bash'
+              scriptLocation: 'scriptPath'
+              scriptPath: 'tools/mongo-migration-tool/scripts/deploy-migrations.sh'
+              arguments: 'auto'
+            env:
+              MONGO_URL: '$(DEV_MONGO_URL)'
+              MONGO_DATABASE: '$(DEV_MONGO_DATABASE)'
+              MONGO_USERNAME: '$(DEV_MONGO_USERNAME)'
+              MONGO_PASSWORD: '$(DEV_MONGO_PASSWORD)'
+              MONGO_SSL_ENABLED: 'true'
+              MONGO_TIMEOUT: '60'
+              DOCKER_IMAGE: '$(containerRegistry)/$(imageRepository)'
+              DOCKER_TAG: '$(tag)'
+              DOCKER_NETWORK: 'bridge'
+              BUILD_NUMBER: '$(tag)'
+              CI: 'true'
+
+- stage: DeployProd
+  displayName: 'Deploy to Production'
+  dependsOn: Build
+  condition: and(succeeded(), eq(variables.isMain, true))
+  jobs:
+  - deployment: DeployMigrations
+    displayName: 'Run Migrations in Production'
+    environment: 'production'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+            fetchDepth: 1
+          
+          # Verify image signature before deployment
+          - task: AzureCLI@2
+            displayName: 'Verify signed image before deployment'
+            inputs:
+              azureSubscription: '$(AZURE_SERVICE_CONNECTION)'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                set -e
+                
+                echo "Installing notation CLI for verification..."
+                curl -Lo notation.tar.gz https://github.com/notaryproject/notation/releases/download/v1.0.0/notation_1.0.0_linux_amd64.tar.gz
+                tar xvzf notation.tar.gz
+                sudo mv notation /usr/local/bin/
+                
+                REGISTRY_URL=$(echo "$(containerRegistry)" | sed 's/.*\/\/\([^\/]*\).*/\1/')
+                
+                echo "Configuring trust store..."
+                notation cert add --type ca --store "$(signingKeyName)" <(echo "$($(signingKeyName))")
+                
+                echo "Verifying signature for production deployment..."
+                notation verify "$REGISTRY_URL/$(imageRepository):$(tag)"
+                
+                echo "Image signature verification passed - proceeding with deployment"
+          
+          - task: AzureCLI@2
+            displayName: 'Run Database Migrations'
+            inputs:
+              azureSubscription: '$(AZURE_SERVICE_CONNECTION)'
+              scriptType: 'bash'
+              scriptLocation: 'scriptPath'
+              scriptPath: 'tools/mongo-migration-tool/scripts/deploy-migrations.sh'
+              arguments: 'auto'
+            env:
+              MONGO_URL: '$(PROD_MONGO_URL)'
+              MONGO_DATABASE: '$(PROD_MONGO_DATABASE)'
+              MONGO_USERNAME: '$(PROD_MONGO_USERNAME)'
+              MONGO_PASSWORD: '$(PROD_MONGO_PASSWORD)'
+              MONGO_SSL_ENABLED: 'true'
+              MONGO_TIMEOUT: '60'
+              DOCKER_IMAGE: '$(containerRegistry)/$(imageRepository)'
+              DOCKER_TAG: '$(tag)'
+              DOCKER_NETWORK: 'bridge'
+              BUILD_NUMBER: '$(tag)'
+              CI: 'true'
+              REQUIRE_SIGNED_IMAGES: 'true'
