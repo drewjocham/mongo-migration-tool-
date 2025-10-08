@@ -14,8 +14,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"github.com/jocham/mongo-essential/internal/config"
-	"github.com/jocham/mongo-essential/internal/migration"
+	"github.com/jocham/mongo-essential/config"
+	"github.com/jocham/mongo-essential/migration"
 )
 
 var (

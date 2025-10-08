@@ -1,10 +1,8 @@
-# Variables
 BINARY_NAME=mongo-migrate
 DOCKER_IMAGE=mongo-migration-tool
 DOCKER_TAG?=latest
-GO_VERSION=1.21
+GO_VERSION=1.25.1
 
-# Build settings
 BUILD_DIR=./build
 LDFLAGS=-ldflags "-X main.version=$(shell git describe --tags --always)"
 
@@ -58,11 +56,20 @@ test: ## Run tests
 	@echo "$(GREEN)Running tests...$(NC)"
 	go test -v ./...
 
+test-library: ## Run library-specific tests
+	@echo "$(GREEN)Running library tests...$(NC)"
+	go test -v ./migration ./config
+
 test-coverage: ## Run tests with coverage
 	@echo "$(GREEN)Running tests with coverage...$(NC)"
 	go test -v -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report generated: coverage.html"
+
+test-examples: ## Test the examples
+	@echo "$(GREEN)Testing examples...$(NC)"
+	@cd examples/basic && go mod tidy && go build -o example main.go
+	@echo "Examples build successfully!"
 
 lint: ## Run golangci-lint
 	@echo "$(GREEN)Running linter...$(NC)"

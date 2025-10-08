@@ -39,6 +39,12 @@ jobs:
     - name: Run tests
       run: go test -v -race -coverprofile=coverage.out ./...
 
+    - name: Test library examples
+      run: |
+        cd examples/basic
+        go mod tidy
+        go build -o example main.go
+
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:

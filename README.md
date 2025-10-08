@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Go Reference](https://pkg.go.dev/badge/github.com/jocham/mongo-essential.svg)](https://pkg.go.dev/github.com/jocham/mongo-essential)
 
-A comprehensive MongoDB migration and database analysis tool with AI-powered insights. Think Liquibase/Flyway for MongoDB, plus intelligent database optimization recommendations.
+A comprehensive MongoDB migration and database analysis tool with AI-powered insights. Available both as a **Go library** for integration into your applications and as a **CLI tool** for standalone use. Think Liquibase/Flyway for MongoDB, plus intelligent database optimization recommendations.
 
 ## 🚀 Features
 
@@ -30,28 +30,96 @@ A comprehensive MongoDB migration and database analysis tool with AI-powered ins
 
 ## 📦 Installation
 
-### Homebrew (macOS/Linux)
+### As a Go Library
+
+Add mongo-essential to your Go project:
+
+```bash
+go get github.com/jocham/mongo-essential
+```
+
+Then import the packages you need:
+
+```go
+import (
+    "github.com/jocham/mongo-essential/migration"
+    "github.com/jocham/mongo-essential/config"
+)
+```
+
+### As a CLI Tool
+
+#### Homebrew (macOS/Linux)
 ```bash
 brew tap jocham/mongo-essential
 brew install mongo-essential
 ```
 
-### Go Install
+#### Go Install
 ```bash
 go install github.com/jocham/mongo-essential@latest
 ```
 
-### Download Binary
+#### Download Binary
 Download the latest binary from [GitHub Releases](https://github.com/jocham/mongo-essential/releases).
 
-### Docker
+#### Docker
 ```bash
 docker run --rm -v $(pwd):/workspace ghcr.io/jocham/mongo-essential:latest --help
 ```
 
 ## 🎯 Quick Start
 
-### 1. Database Migrations
+### Library Usage
+
+```go
+package main
+
+import (
+    "context"
+    "log"
+
+    "go.mongodb.org/mongo-driver/mongo"
+    "go.mongodb.org/mongo-driver/mongo/options"
+    "github.com/jocham/mongo-essential/config"
+    "github.com/jocham/mongo-essential/migration"
+)
+
+func main() {
+    // Load configuration
+    cfg, err := config.Load(".env")
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    // Connect to MongoDB
+    client, err := mongo.Connect(context.Background(), 
+        options.Client().ApplyURI(cfg.GetConnectionString()))
+    if err != nil {
+        log.Fatal(err)
+    }
+    db := client.Database(cfg.Database)
+
+    // Create and run migrations
+    engine := migration.NewEngine(db, cfg.MigrationsCollection)
+    engine.RegisterMany(
+        &CreateUsersCollection{},
+        &AddUserIndexes{},
+    )
+    
+    if err := engine.Up(context.Background(), ""); err != nil {
+        log.Fatal(err)
+    }
+
+    log.Println("Migrations completed successfully!")
+}
+```
+
+See the [examples directory](./examples/) for complete working examples.
+
+### CLI Usage
+
+#### 1. Database Migrations
 
 ```bash
 # Initialize configuration
