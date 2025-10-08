@@ -1,0 +1,149 @@
+# GoReleaser configuration for mongo-essential
+project_name: mongo-essential
+
+before:
+  hooks:
+    # Clean up before building
+    - go mod tidy
+    - go generate ./...
+
+builds:
+  - id: mongo-essential
+    binary: mongo-essential
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    # Exclude invalid combinations
+    ignore:
+      - goos: windows
+        goarch: arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+    flags:
+      - -trimpath
+
+archives:
+  - id: default
+    format: tar.gz
+    # Use zip for Windows
+    format_overrides:
+      - goos: windows
+        format: zip
+    name_template: >-
+      {{ .ProjectName }}-
+      {{- title .Os }}-
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    files:
+      - README.md
+      - LICENSE
+      - CHANGELOG.md
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^ci:'
+      - '^chore:'
+      - '^style:'
+      - '^refactor:'
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 0
+    - title: 'Bug fixes'
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
+      order: 1
+    - title: Others
+      order: 999
+
+release:
+  github:
+    owner: jocham
+    name: mongo-essential
+  draft: false
+  prerelease: auto
+  mode: replace
+  header: |
+    ## mongo-essential {{.Tag}} ({{.Date}})
+    
+    **Full Changelog**: https://github.com/jocham/mongo-essential/compare/{{.PreviousTag}}...{{.Tag}}
+
+brews:
+  - name: mongo-essential
+    repository:
+      owner: jocham
+      name: homebrew-mongo-essential
+      branch: main
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    url_template: "https://github.com/jocham/mongo-essential/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+    download_strategy: CurlDownloadStrategy
+    homepage: "https://github.com/jocham/mongo-essential"
+    description: "MongoDB migration and AI-powered database analysis tool"
+    license: "MIT"
+    skip_upload: auto
+    test: |
+      system "#{bin}/mongo-essential version"
+    install: |-
+      bin.install "mongo-essential"
+
+dockers:
+  - image_templates:
+      - "ghcr.io/jocham/mongo-essential:{{ .Version }}-amd64"
+      - "ghcr.io/jocham/mongo-essential:latest-amd64"
+    dockerfile: Dockerfile.release
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+  - image_templates:
+      - "ghcr.io/jocham/mongo-essential:{{ .Version }}-arm64"
+      - "ghcr.io/jocham/mongo-essential:latest-arm64"
+    dockerfile: Dockerfile.release
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/arm64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+    goarch: arm64
+
+docker_manifests:
+  - name_template: "ghcr.io/jocham/mongo-essential:{{ .Version }}"
+    image_templates:
+      - "ghcr.io/jocham/mongo-essential:{{ .Version }}-amd64"
+      - "ghcr.io/jocham/mongo-essential:{{ .Version }}-arm64"
+  - name_template: "ghcr.io/jocham/mongo-essential:latest"
+    image_templates:
+      - "ghcr.io/jocham/mongo-essential:latest-amd64"
+      - "ghcr.io/jocham/mongo-essential:latest-arm64"
+
+# Generate software bill of materials
+sboms:
+  - artifacts: archive

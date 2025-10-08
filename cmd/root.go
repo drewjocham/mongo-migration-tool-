@@ -38,6 +38,11 @@ Features:
 - Force migration marking
 - Integration with existing Go projects`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		// Skip configuration loading for version command
+		if cmd.Name() == "version" {
+			return nil
+		}
+		
 		var err error
 
 		if configFile != "" {

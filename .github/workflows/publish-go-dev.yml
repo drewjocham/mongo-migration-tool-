@@ -1,0 +1,24 @@
+# This workflow triggers pkg.go.dev to update documentation when releases are created
+name: Publish to pkg.go.dev
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  update-pkg-go-dev:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger pkg.go.dev update
+        run: |
+          # Trigger pkg.go.dev to fetch the new version
+          curl -X POST "https://proxy.golang.org/github.com/jocham/mongo-essential/@latest"
+          
+          # Also trigger the versioned endpoint
+          VERSION="${GITHUB_REF#refs/tags/}"
+          if [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            curl -X POST "https://proxy.golang.org/github.com/jocham/mongo-essential/@$VERSION"
+          fi
+          
+          echo "Triggered pkg.go.dev update for github.com/jocham/mongo-essential"

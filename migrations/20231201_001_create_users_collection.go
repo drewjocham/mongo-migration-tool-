@@ -28,19 +28,19 @@ func (m *Migration_20231201_001) Up(ctx context.Context, db *mongo.Database) err
 
 	// Create unique index on email
 	emailIndex := mongo.IndexModel{
-		Keys:    bson.D{{"email", 1}},
+		Keys:    bson.D{{Key: "email", Value: 1}},
 		Options: options.Index().SetUnique(true).SetName("email_unique"),
 	}
 
 	// Create unique index on username
 	usernameIndex := mongo.IndexModel{
-		Keys:    bson.D{{"username", 1}},
+		Keys:    bson.D{{Key: "username", Value: 1}},
 		Options: options.Index().SetUnique(true).SetName("username_unique"),
 	}
 
 	// Create compound index on created_at and status
 	compoundIndex := mongo.IndexModel{
-		Keys:    bson.D{{"created_at", -1}, {"status", 1}},
+		Keys:    bson.D{{Key: "created_at", Value: -1}, {Key: "status", Value: 1}},
 		Options: options.Index().SetName("created_at_status"),
 	}
 

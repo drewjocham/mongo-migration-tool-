@@ -1,0 +1,12 @@
+FROM alpine:3.19
+
+RUN apk --no-cache add ca-certificates tzdata
+
+WORKDIR /app
+
+COPY mongo-essential .
+
+RUN adduser -D -s /bin/sh migration
+USER migration
+
+ENTRYPOINT ["./mongo-essential"]

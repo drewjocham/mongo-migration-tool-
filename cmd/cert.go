@@ -15,7 +15,6 @@ import (
 )
 
 var (
-	hostFlag        string
 	portFlag        string
 	skipVerifyFlag  bool
 	verboseFlag     bool
@@ -496,8 +495,8 @@ func showCertInfo() error {
 
 	// Show file locations
 	fmt.Println("\nCertificate Files:")
-	checkSystemCerts()
-	checkPythonCerts()
+	_ = checkSystemCerts()
+	_ = checkPythonCerts()
 
 	return nil
 }

@@ -1,0 +1,60 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24.0'
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+
+  update-pkg-go-dev:
+    runs-on: ubuntu-latest
+    needs: goreleaser
+    steps:
+      - name: Trigger pkg.go.dev update
+        run: |
+          # Trigger pkg.go.dev to fetch the new version
+          VERSION="${GITHUB_REF#refs/tags/}"
+          echo "Triggering pkg.go.dev update for version: $VERSION"
+          
+          # Trigger the module proxy to fetch the new version
+          curl -f -X POST "https://proxy.golang.org/github.com/jocham/mongo-essential/@$VERSION" || echo "Module proxy request completed"
+          curl -f -X POST "https://proxy.golang.org/github.com/jocham/mongo-essential/@latest" || echo "Latest version request completed"
+          
+          echo "pkg.go.dev update triggered for github.com/jocham/mongo-essential"

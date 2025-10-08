@@ -28,13 +28,13 @@ func (m *Migration_20231201_002) Up(ctx context.Context, db *mongo.Database) err
 	usersCollection := db.Collection("users")
 
 	adminUser := bson.D{
-		{"_id", "admin-001"},
-		{"username", "admin"},
-		{"email", "admin@example.com"},
-		{"role", "admin"},
-		{"status", "active"},
-		{"created_at", time.Now().UTC()},
-		{"updated_at", time.Now().UTC()},
+		{Key: "_id", Value: "admin-001"},
+		{Key: "username", Value: "admin"},
+		{Key: "email", Value: "admin@example.com"},
+		{Key: "role", Value: "admin"},
+		{Key: "status", Value: "active"},
+		{Key: "created_at", Value: time.Now().UTC()},
+		{Key: "updated_at", Value: time.Now().UTC()},
 	}
 
 	_, err := usersCollection.InsertOne(ctx, adminUser)
@@ -47,18 +47,18 @@ func (m *Migration_20231201_002) Up(ctx context.Context, db *mongo.Database) err
 
 	configs := []interface{}{
 		bson.D{
-			{"_id", "app_settings"},
-			{"max_upload_size", 10485760}, // 10MB
-			{"allowed_file_types", []string{"jpg", "png", "pdf", "docx"}},
-			{"maintenance_mode", false},
-			{"created_at", time.Now().UTC()},
+			{Key: "_id", Value: "app_settings"},
+			{Key: "max_upload_size", Value: 10485760}, // 10MB
+			{Key: "allowed_file_types", Value: []string{"jpg", "png", "pdf", "docx"}},
+			{Key: "maintenance_mode", Value: false},
+			{Key: "created_at", Value: time.Now().UTC()},
 		},
 		bson.D{
-			{"_id", "email_settings"},
-			{"smtp_host", "localhost"},
-			{"smtp_port", 587},
-			{"from_email", "noreply@example.com"},
-			{"created_at", time.Now().UTC()},
+			{Key: "_id", Value: "email_settings"},
+			{Key: "smtp_host", Value: "localhost"},
+			{Key: "smtp_port", Value: 587},
+			{Key: "from_email", Value: "noreply@example.com"},
+			{Key: "created_at", Value: time.Now().UTC()},
 		},
 	}
 
@@ -75,7 +75,7 @@ func (m *Migration_20231201_002) Up(ctx context.Context, db *mongo.Database) err
 func (m *Migration_20231201_002) Down(ctx context.Context, db *mongo.Database) error {
 	// Remove the admin user
 	usersCollection := db.Collection("users")
-	_, err := usersCollection.DeleteOne(ctx, bson.D{{"_id", "admin-001"}})
+	_, err := usersCollection.DeleteOne(ctx, bson.D{{Key: "_id", Value: "admin-001"}})
 	if err != nil {
 		return fmt.Errorf("failed to remove admin user: %w", err)
 	}
@@ -83,7 +83,7 @@ func (m *Migration_20231201_002) Down(ctx context.Context, db *mongo.Database) e
 	// Remove system configuration
 	configCollection := db.Collection("system_config")
 	_, err = configCollection.DeleteMany(ctx, bson.D{
-		{"_id", bson.D{{"$in", []string{"app_settings", "email_settings"}}}},
+		{Key: "_id", Value: bson.D{{Key: "$in", Value: []string{"app_settings", "email_settings"}}}},
 	})
 	if err != nil {
 		return fmt.Errorf("failed to remove system configuration: %w", err)
