@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  mongo-migrate:
+    build: .
+    environment:
+      - MONGO_URL=mongodb://mongo:27017
+      - MONGO_DATABASE=test_db
+      - MIGRATIONS_PATH=/app/migrations
+      - MIGRATIONS_COLLECTION=schema_migrations
+      - MONGO_TIMEOUT=30
+    volumes:
+      # Mount local migrations directory if you want to use local files
+      - ./migrations:/app/migrations
+    depends_on:
+      - mongo
+    command: ["status"]  # Default command - change as needed
+
+  # Example MongoDB for testing
+  mongo:
+    image: mongo:7.0
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+      - MONGO_INITDB_DATABASE=test_db
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:

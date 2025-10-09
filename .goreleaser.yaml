@@ -1,0 +1,261 @@
+# GoReleaser configuration for mongo-essential
+# Documentation: https://goreleaser.com
+
+version: 2
+
+project_name: mongo-essential
+
+before:
+  hooks:
+    # Clean up before building
+    - go mod tidy
+    - go mod download
+
+builds:
+  - id: mongo-essential
+    binary: mongo-essential
+    main: ./
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+      - arm
+    goarm:
+      - "7"
+    ignore:
+      - goos: windows
+        goarch: arm
+      - goos: windows
+        goarch: arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.ShortCommit}}
+      - -X main.date={{.Date}}
+      - -X main.builtBy=goreleaser
+
+archives:
+  - id: default
+    format: tar.gz
+    # Windows should use zip
+    format_overrides:
+      - goos: windows
+        format: zip
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    files:
+      - README.md
+      - LICENSE
+      - MCP.md
+      - .env.example
+      - examples/**/*
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^ci:'
+      - '^chore:'
+      - '^refactor:'
+      - '^style:'
+      - '^build:'
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\(.+\))??!?:.+$'
+      order: 0
+    - title: 'Bug fixes'
+      regexp: '^.*?fix(\(.+\))??!?:.+$'
+      order: 1
+    - title: 'MCP Integration'
+      regexp: '^.*?mcp(\(.+\))??!?:.+$'
+      order: 2
+    - title: Others
+      order: 999
+
+# Homebrew tap
+brews:
+  - name: mongo-essential
+    # Create a GitHub repository for your Homebrew tap
+    # GitHub repository for the tap
+    repository:
+      owner: jocham
+      name: homebrew-mongo-essential
+      branch: main
+      token: "{{ .Env.GITHUB_TOKEN }}"
+    
+    # Folder inside the repository to put the formula
+    folder: Formula
+    
+    # Homepage of your project
+    homepage: https://github.com/jocham/mongo-essential
+    
+    # Your project's description
+    description: "MongoDB migration tool with AI-powered insights and MCP support"
+    
+    # License of your project
+    license: MIT
+    
+    # Dependencies
+    dependencies:
+      - name: mongodb/brew/mongodb-community
+        type: optional
+    
+    # Custom install script
+    install: |-
+      bin.install "mongo-essential"
+      
+      # Install example configurations
+      pkgshare.install ".env.example"
+      pkgshare.install "examples"
+      pkgshare.install "MCP.md"
+    
+    # Test the installation
+    test: |
+      system "#{bin}/mongo-essential --version"
+
+# Docker images
+dockers:
+  - image_templates:
+      - "ghcr.io/jocham/mongo-essential:{{ .Version }}-amd64"
+      - "ghcr.io/jocham/mongo-essential:latest-amd64"
+    dockerfile: Dockerfile
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source=https://github.com/jocham/mongo-essential"
+  
+  - image_templates:
+      - "ghcr.io/jocham/mongo-essential:{{ .Version }}-arm64"
+      - "ghcr.io/jocham/mongo-essential:latest-arm64"
+    dockerfile: Dockerfile
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/arm64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source=https://github.com/jocham/mongo-essential"
+
+# Multi-platform Docker manifest
+docker_manifests:
+  - name_template: "ghcr.io/jocham/mongo-essential:{{ .Version }}"
+    image_templates:
+      - "ghcr.io/jocham/mongo-essential:{{ .Version }}-amd64"
+      - "ghcr.io/jocham/mongo-essential:{{ .Version }}-arm64"
+  
+  - name_template: "ghcr.io/jocham/mongo-essential:latest"
+    image_templates:
+      - "ghcr.io/jocham/mongo-essential:latest-amd64"
+      - "ghcr.io/jocham/mongo-essential:latest-arm64"
+
+# GitHub release settings
+release:
+  github:
+    owner: jocham
+    name: mongo-essential
+  
+  draft: false
+  prerelease: auto
+  
+  name_template: "Release v{{.Version}}"
+  
+  header: |
+    ## MongoDB Migration Tool v{{.Version}}
+    
+    A comprehensive MongoDB migration tool with AI-powered insights and MCP (Model Context Protocol) support for AI assistants like Ollama, Claude, and Goose.
+    
+    ### Installation
+    
+    #### Homebrew (macOS/Linux)
+    ```bash
+    brew tap jocham/mongo-essential
+    brew install mongo-essential
+    ```
+    
+    #### Go Install
+    ```bash
+    go install github.com/jocham/mongo-essential@v{{.Version}}
+    ```
+    
+    #### Docker
+    ```bash
+    docker run --rm ghcr.io/jocham/mongo-essential:{{.Version}} --help
+    ```
+  
+  footer: |
+    ## Library Usage
+    
+    Use mongo-essential as a Go library in your projects:
+    
+    ```bash
+    go get github.com/jocham/mongo-essential@v{{.Version}}
+    ```
+    
+    See the [documentation](https://pkg.go.dev/github.com/jocham/mongo-essential) for detailed API usage.
+
+# Package managers
+nfpms:
+  - id: packages
+    package_name: mongo-essential
+    
+    homepage: https://github.com/jocham/mongo-essential
+    description: MongoDB migration tool with AI-powered insights and MCP support
+    maintainer: jocham <your-email@example.com>
+    license: MIT
+    
+    formats:
+      - deb
+      - rpm
+      - apk
+    
+    bindir: /usr/bin
+    
+    contents:
+      - src: .env.example
+        dst: /usr/share/mongo-essential/.env.example
+      - src: MCP.md
+        dst: /usr/share/doc/mongo-essential/MCP.md
+      - src: examples/
+        dst: /usr/share/mongo-essential/examples/
+
+# Announce the release
+announce:
+  skip: true
+
+# Sign the artifacts
+signs:
+  - cmd: cosign
+    env:
+      - COSIGN_EXPERIMENTAL=1
+    certificate: '${artifact}.pem'
+    args:
+      - sign-blob
+      - '--output-certificate=${certificate}'
+      - '--output-signature=${signature}'
+      - '${artifact}'
+      - --yes
+    artifacts: checksum

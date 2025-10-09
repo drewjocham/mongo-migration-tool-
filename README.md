@@ -27,27 +27,49 @@ A comprehensive MongoDB migration and database analysis tool with AI-powered ins
 - **Cloud Provider Support**: Optimized for STACKIT, AWS, Azure, GCP
 - **CLI Interface**: Intuitive command-line interface built with Cobra
 - **Configuration Flexible**: Environment variables, config files, or CLI flags
+- **🤖 MCP Integration**: Model Context Protocol server for AI assistants (Ollama, Claude, Goose)
 
 ## 📦 Installation
 
-### Homebrew (macOS/Linux)
+Choose your preferred installation method:
+
+### Homebrew (macOS/Linux) - Recommended
+
 ```bash
+# Add the tap and install
 brew tap jocham/mongo-essential
 brew install mongo-essential
+
+# Verify installation
+mongo-essential version
 ```
 
-### Go Install
+### Docker
+
+```bash
+# Pull and run
+docker pull ghcr.io/jocham/mongo-essential:latest
+docker run --rm -v $(pwd):/workspace ghcr.io/jocham/mongo-essential:latest --help
+```
+
+### Go Library
+
+```bash
+# Add to your Go project
+go get github.com/jocham/mongo-essential@latest
+```
+
+### Binary Download
+
+Download pre-built binaries from [GitHub Releases](https://github.com/jocham/mongo-essential/releases) for Linux, macOS, Windows, and FreeBSD.
+
+### Go Install (Development)
+
 ```bash
 go install github.com/jocham/mongo-essential@latest
 ```
 
-### Download Binary
-Download the latest binary from [GitHub Releases](https://github.com/jocham/mongo-essential/releases).
-
-### Docker
-```bash
-docker run --rm -v $(pwd):/workspace ghcr.io/jocham/mongo-essential:latest --help
-```
+**📚 For detailed installation instructions, platform-specific guides, and troubleshooting, see [INSTALL.md](INSTALL.md)**
 
 ## 🎯 Quick Start
 
@@ -105,6 +127,26 @@ mongo-essential cert check login.microsoftonline.com --verbose
 mongo-essential cert fix --apply
 ```
 
+### 4. AI Assistant Integration (MCP)
+
+```bash
+# Start MCP server for AI assistants like Ollama, Claude, Goose
+mongo-essential mcp
+
+# Start with example migrations for testing
+mongo-essential mcp --with-examples
+
+# Test MCP integration
+make mcp-test
+```
+
+Then configure your AI assistant to use the MCP server:
+- **Ollama**: Add to `~/.config/ollama/mcp-config.json`
+- **Claude Desktop**: Add to Claude Desktop configuration
+- **Goose**: Use with `--mcp-config` flag
+
+See [MCP Integration Guide](MCP.md) for detailed setup instructions.
+
 ## ⚙️ Configuration
 
 ### Environment Variables
@@ -135,7 +177,71 @@ MONGO_SSL_INSECURE=false
 
 See [.env.example](./.env.example) for complete configuration options.
 
+## 🚀 Library Usage
+
+Use mongo-essential as a Go library in your applications:
+
+```go
+package main
+
+import (
+    "context"
+    "log"
+    
+    "github.com/jocham/mongo-essential/config"
+    "github.com/jocham/mongo-essential/migration"
+    "go.mongodb.org/mongo-driver/mongo"
+    "go.mongodb.org/mongo-driver/mongo/options"
+)
+
+func main() {
+    // Load configuration
+    cfg, err := config.Load()
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    // Connect to MongoDB
+    client, err := mongo.Connect(context.Background(), 
+        options.Client().ApplyURI(cfg.GetConnectionString()))
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer client.Disconnect(context.Background())
+    
+    // Create migration engine
+    engine := migration.NewEngine(
+        client.Database(cfg.Database), 
+        cfg.MigrationsCollection)
+    
+    // Register your migrations
+    engine.RegisterMany(
+        &AddUserIndexesMigration{},
+        &CreateProductCollection{},
+    )
+    
+    // Run migrations
+    if err := engine.Up(context.Background(), ""); err != nil {
+        log.Fatal(err)
+    }
+    
+    log.Println("Migrations completed!")
+}
+```
+
+**📚 For complete library documentation and examples, see [LIBRARY.md](LIBRARY.md)**
+
 ## 📖 Documentation
+
+### Comprehensive Guides
+
+| Guide | Description |
+|-------|-------------|
+| **[INSTALL.md](INSTALL.md)** | Complete installation guide for all platforms |
+| **[LIBRARY.md](LIBRARY.md)** | Go library usage, API reference, and examples |
+| **[MCP.md](MCP.md)** | Model Context Protocol integration guide |
+| **[AI_ANALYSIS.md](AI_ANALYSIS.md)** | AI-powered database analysis documentation |
+| **[CONTRIBUTING.md](CONTRIBUTING.md)** | Development and contribution guidelines |
 
 ### Commands
 
@@ -154,6 +260,8 @@ See [.env.example](./.env.example) for complete configuration options.
 | `mongo-essential cert diagnose` | Certificate diagnostics |
 | `mongo-essential cert check <host>` | Check host certificate |
 | `mongo-essential cert fix` | Fix certificate issues |
+| `mongo-essential mcp` | Start MCP server for AI assistants |
+| `mongo-essential mcp --with-examples` | Start MCP server with example migrations |
 
 ### AI Providers
 
@@ -249,20 +357,28 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [OpenAI](https://openai.com/), [Google](https://ai.google.dev/), [Anthropic](https://www.anthropic.com/) for AI capabilities
 - [Google APIs](https://developers.google.com/docs/api) for Docs integration
 
-## 🔗 Links
+## 🔗 Links & Resources
 
-- [Documentation](https://pkg.go.dev/github.com/jocham/mongo-essential)
-- [GitHub Repository](https://github.com/jocham/mongo-essential)
-- [Issue Tracker](https://github.com/jocham/mongo-essential/issues)
-- [Homebrew Formula](https://github.com/jocham/homebrew-mongo-essential)
-- [Docker Images](https://ghcr.io/jocham/mongo-essential)
+### Project Resources
+- **[Go Package Documentation](https://pkg.go.dev/github.com/jocham/mongo-essential)** - Complete API reference
+- **[GitHub Repository](https://github.com/jocham/mongo-essential)** - Source code and releases
+- **[Issue Tracker](https://github.com/jocham/mongo-essential/issues)** - Bug reports and feature requests
+- **[Homebrew Formula](https://github.com/jocham/homebrew-mongo-essential)** - Homebrew tap repository
+- **[Docker Images](https://ghcr.io/jocham/mongo-essential)** - Container registry
 
-## 🐛 Support
+### Documentation
+- **[Installation Guide](INSTALL.md)** - All installation methods and troubleshooting
+- **[Library Documentation](LIBRARY.md)** - Go library usage and examples
+- **[MCP Integration](MCP.md)** - AI assistant integration guide
+- **[AI Analysis Guide](AI_ANALYSIS.md)** - Database analysis documentation
+- **[Contributing Guide](CONTRIBUTING.md)** - Development setup and guidelines
 
-- 📝 **Email**: [jocham@example.com](mailto:jocham@example.com)
+## 🐛 Support & Community
+
 - 🐛 **Issues**: [GitHub Issues](https://github.com/jocham/mongo-essential/issues)
 - 💬 **Discussions**: [GitHub Discussions](https://github.com/jocham/mongo-essential/discussions)
-- 📖 **Documentation**: [AI Analysis Guide](./AI_ANALYSIS.md)
+- 📧 **Contact**: [Project Maintainer](https://github.com/jocham)
+- 📖 **Examples**: See the `examples/` directory in the repository
 
 ---
 
