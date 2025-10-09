@@ -164,3 +164,4 @@ migrations/dev_*
 
 # Go workspace
 go.work.sum
+/.idea/
