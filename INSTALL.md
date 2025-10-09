@@ -167,7 +167,7 @@ Use mongo-essential as a library in your Go projects.
 
 ### Prerequisites
 
-- Go 1.21 or later
+- Go 1.24 or later
 
 ### Installation
 
@@ -454,7 +454,7 @@ After installation, you might want to:
 
 ## Supported Versions
 
-- **Go**: 1.21+
+- **Go**: 1.24+
 - **MongoDB**: 4.4+ (tested with 4.4, 5.0, 6.0, 7.0)
 - **Operating Systems**: Linux, macOS, Windows, FreeBSD
 - **Architectures**: AMD64, ARM64

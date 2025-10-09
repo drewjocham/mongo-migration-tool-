@@ -7,7 +7,7 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o mongo-migrate .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o mongo-essential .
 
 FROM alpine:3.19
 
@@ -15,12 +15,15 @@ RUN apk --no-cache add ca-certificates tzdata
 
 WORKDIR /app
 
-COPY --from=builder /app/mongo-migrate .
+COPY --from=builder /app/mongo-essential .
 
-# Create migrations directory (will be empty initially)
+# Create migrations directory
 RUN mkdir -p migrations
+
+COPY .env.example .
+COPY examples/ examples/
 
 RUN adduser -D -s /bin/sh migration
 USER migration
 
-ENTRYPOINT ["./mongo-migrate"]
+ENTRYPOINT ["./mongo-essential"]

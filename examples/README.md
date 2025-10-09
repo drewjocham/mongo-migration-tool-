@@ -43,26 +43,47 @@ A complete example showing how to:
 4. Register multiple migrations
 5. Implement up/down/status commands
 
-### Usage
+### Quick Setup
 
-Make sure you have a MongoDB instance running and set your environment variables:
+#### Option 1: Using Docker Compose (Recommended)
 
 ```bash
-export MONGO_URI="mongodb://localhost:27017"
-export MONGO_DATABASE="example_db"
-export MIGRATIONS_COLLECTION="schema_migrations"
+# From the examples directory
+cd examples
+
+# Start MongoDB with sample data
+docker-compose up -d
+
+# Copy environment configuration
+cp .env.example .env
+
+# Run the examples
+go run main.go status
+go run main.go up
+go run main.go status
+go run main.go down
+
+# Clean up when done
+docker-compose down
 ```
 
-Run the example commands:
+#### Option 2: Local MongoDB
+
+If you have MongoDB running locally:
 
 ```bash
-# Show migration status
+# Set environment variables
+export MONGO_URL="mongodb://localhost:27017"
+export MONGO_DATABASE="migration_examples"
+export MIGRATIONS_COLLECTION="schema_migrations"
+
+# Or copy and edit the config file
+cp .env.example .env
+# Edit .env with your settings
+
+# Run the examples
 go run main.go status
-
-# Run all pending migrations
 go run main.go up
-
-# Roll back the last migration
 go run main.go down
 ```
 
@@ -98,22 +119,38 @@ Rolling back migration: 20240101_003 - Create audit collection with schema valid
 ✅ Rolled back migration: 20240101_003
 ```
 
+## Library Usage Example
+
+See `library-usage-example.go` for a complete example of using mongo-essential as a library in your own project. This example:
+
+- Shows how to use mongo-essential without depending on the main project structure
+- Demonstrates programmatic configuration as well as .env file usage
+- Includes a complete migration lifecycle (up, status, down)
+- Can be copied and adapted for your own projects
+
+To run the library usage example:
+
+```bash
+# Make sure MongoDB is running (via Docker or locally)
+go run library-usage-example.go
+```
+
 ## Integration with Your Project
 
 To use these examples in your own project:
 
-1. **Copy migration patterns**: Use the migration structs in `examplemigrations/` as templates
-2. **Adapt the CLI**: Modify `main.go` to fit your application structure
-3. **Configure properly**: Update import paths to match your module name
-4. **Add error handling**: Enhance error handling as needed for production use
-5. **Package structure**: The example migrations are in the `examplemigrations` package for proper Go module organization
+1. **Install the library**: `go get github.com/jocham/mongo-essential@latest`
+2. **Copy migration patterns**: Use the migration structs in `examplemigrations/` as templates
+3. **Use the library example**: Copy and adapt `library-usage-example.go` for your needs
+4. **Configure properly**: Set up your .env file or programmatic configuration
+5. **Add error handling**: Enhance error handling as needed for production use
 
 ## Testing the Examples
 
 You can test the examples with a local MongoDB instance:
 
 ```bash
-# Start MongoDB (if using Docker)
+# Start MongoDB 
 docker run -d -p 27017:27017 --name mongo-test mongo:latest
 
 # Run the examples
@@ -126,7 +163,7 @@ go run main.go down
 
 ## Best Practices Demonstrated
 
-1. **Idempotent operations**: Migrations handle cases where operations might be run multiple times
+1[library-usage-example.go](library-usage-example.go). **Idempotent operations**: Migrations handle cases where operations might be run multiple times
 2. **Proper error handling**: Each migration returns errors appropriately
 3. **Background index creation**: Uses background option to avoid blocking
 4. **Schema validation**: Shows how to enforce data quality with JSON Schema

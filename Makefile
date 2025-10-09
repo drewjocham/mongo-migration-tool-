@@ -53,7 +53,7 @@ clean: ## Clean build artifacts
 
 test: ## Run tests
 	@echo "$(GREEN)Running tests...$(NC)"
-	go test -v ./...
+	go test -v $(shell go list ./... | grep -v /examples)
 
 test-library: ## Run library-specific tests
 	@echo "$(GREEN)Running library tests...$(NC)"
@@ -61,18 +61,21 @@ test-library: ## Run library-specific tests
 
 test-coverage: ## Run tests with coverage
 	@echo "$(GREEN)Running tests with coverage...$(NC)"
-	go test -v -coverprofile=coverage.out ./...
+	go test -v -coverprofile=coverage.out $(shell go list ./... | grep -v /examples)
 	go tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report generated: coverage.html"
 
 test-examples: ## Test the examples
 	@echo "$(GREEN)Testing examples...$(NC)"
 	@go build -o examples/example examples/main.go
-	@echo "Examples build successfully!"
+	@go build -o examples/library-example examples/library-usage-example.go
+	@echo "✅ Examples build successfully!"
+	@echo "  - CLI example: examples/example"
+	@echo "  - Library example: examples/library-example"
 
 lint: ## Run golangci-lint
 	@echo "$(GREEN)Running linter...$(NC)"
-	golangci-lint run
+	golangci-lint run ./config/... ./migration/... ./mcp/... ./cmd/...
 
 format: ## Format Go code
 	@echo "$(GREEN)Formatting code...$(NC)"
@@ -81,7 +84,7 @@ format: ## Format Go code
 
 vet: ## Run go vet
 	@echo "$(GREEN)Running go vet...$(NC)"
-	go vet ./...
+	go vet $(shell go list ./... | grep -v /examples)
 
 docker-build: ## Build Docker image
 	@echo "$(GREEN)Building Docker image $(DOCKER_IMAGE):$(DOCKER_TAG)...$(NC)"

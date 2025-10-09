@@ -14,9 +14,7 @@ services:
       - ./migrations:/app/migrations
     depends_on:
       - mongo
-    command: ["status"]  # Default command - change as needed
-
-  # Example MongoDB for testing
+    command: ["status"]
   mongo:
     image: mongo:7.0
     ports:

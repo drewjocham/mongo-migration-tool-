@@ -39,13 +39,13 @@ jobs:
         run: go mod verify
 
       - name: Build
-        run: go build -v ./...
+        run: go build -v $(go list ./... | grep -v /examples)
 
       - name: Run vet
-        run: go vet ./...
+        run: go vet $(go list ./... | grep -v /examples)
 
       - name: Run tests
-        run: go test -v -race -coverprofile=coverage.out ./...
+        run: go test -v -race -coverprofile=coverage.out $(go list ./... | grep -v /examples)
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -85,6 +85,9 @@ jobs:
         run: |
           go build -o examples/example examples/main.go
           chmod +x examples/example
+          go build -o examples/library-example examples/library-usage-example.go
+          chmod +x examples/library-example
+          echo "✅ Both example binaries built successfully"
 
   docker:
     runs-on: ubuntu-latest

@@ -56,7 +56,7 @@ We welcome pull requests for:
 
 ### Prerequisites
 
-- **Go 1.21 or later**
+- **Go 1.24 or later**
 - **Git**
 - **MongoDB** (for testing)
 - **Docker** (optional, for containerized testing)
