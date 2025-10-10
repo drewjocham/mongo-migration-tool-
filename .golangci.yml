@@ -55,26 +55,26 @@ linters-settings:
           - pkg: io/ioutil
             desc: "use os and io packages instead of io/ioutil"
         files:
-          - $all
+          - "$all"
         allow:
-          - $gostd
-          - github.com/spf13/cobra
-          - go.mongodb.org/mongo-driver/mongo
-          - go.mongodb.org/mongo-driver/mongo/options
-          - go.mongodb.org/mongo-driver/bson
-          - go.mongodb.org/mongo-driver/mongo/integration/mtest
-          - github.com/caarlos0/env/v11
-          - github.com/joho/godotenv
-          - github.com/jocham/mongo-essential/config
-          - github.com/jocham/mongo-essential/migration
-          - github.com/jocham/mongo-essential/mcp
-          - github.com/jocham/mongo-essential/examples/examplemigrations
+          - "$gostd"
+          - "github.com/spf13/cobra"
+          - "go.mongodb.org/mongo-driver/mongo"
+          - "go.mongodb.org/mongo-driver/mongo/options"
+          - "go.mongodb.org/mongo-driver/bson"
+          - "go.mongodb.org/mongo-driver/mongo/integration/mtest"
+          - "github.com/caarlos0/env/v11"
+          - "github.com/joho/godotenv"
+          - "github.com/jocham/mongo-essential/config"
+          - "github.com/jocham/mongo-essential/migration"
+          - "github.com/jocham/mongo-essential/mcp"
+          - "github.com/jocham/mongo-essential/examples/examplemigrations"
 
 linters:
   disable-all: true
   enable:
     - bodyclose
-    # - depguard  # disabled due to configuration issues
+    # - depguard  # disabled due to ongoing configuration issues
     - dogsled
     - dupl
     - errcheck
@@ -123,7 +123,7 @@ issues:
   exclude:
     # Allow blank imports for side effects
     - "should not use blank imports"
-    
+  
   max-issues-per-linter: 0
   max-same-issues: 0
   new: false
