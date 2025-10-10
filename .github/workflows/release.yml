@@ -49,13 +49,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # Trigger go.dev to update the package documentation
   update-pkg-go-dev:
     runs-on: ubuntu-latest
     needs: goreleaser
     steps:
       - name: Update pkg.go.dev
         run: |
-          curl -X POST "https://proxy.golang.org/github.com/jocham/mongo-essential/@v/${{ github.ref_name }}.info"
+          curl -X POST "https://proxy.golang.org/github.com/drewjocham/mongo-essential/@v/${{ github.ref_name }}.info"
           sleep 5
-          curl "https://pkg.go.dev/github.com/jocham/mongo-essential@${{ github.ref_name }}"
+          curl "https://pkg.go.dev/github.com/drewjocham/mongo-essential@${{ github.ref_name }}"
