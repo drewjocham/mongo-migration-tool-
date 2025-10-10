@@ -1,3 +1,4 @@
+// Package cmd provides command-line interface commands for the mongo-essential tool.
 package cmd
 
 import (
@@ -23,7 +24,7 @@ Examples:
   mongo-essential create add_user_index
   mongo-essential create "Create product collection"`,
 	Args: cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, args []string) error {
 		migrationName := args[0]
 
 		// Generate timestamp-based version
@@ -37,7 +38,8 @@ Examples:
 		filename := fmt.Sprintf("%s.go", version)
 
 		// Ensure migrations directory exists
-		if err := os.MkdirAll(cfg.MigrationsPath, 0755); err != nil {
+		const dirPermissions = 0750
+		if err := os.MkdirAll(cfg.MigrationsPath, dirPermissions); err != nil {
 			return fmt.Errorf("failed to create migrations directory: %w", err)
 		}
 
@@ -110,7 +112,8 @@ func (m *Migration_%s) Down(ctx context.Context, db *mongo.Database) error {
 			version)
 
 		// Write the file
-		if err := os.WriteFile(filepath, []byte(content), 0644); err != nil {
+		const filePermissions = 0600
+		if err := os.WriteFile(filepath, []byte(content), filePermissions); err != nil {
 			return fmt.Errorf("failed to write migration file: %w", err)
 		}
 

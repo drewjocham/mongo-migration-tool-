@@ -85,8 +85,8 @@ jobs:
         run: |
           go build -o examples/example examples/main.go
           chmod +x examples/example
-          go build -o examples/library-example examples/library-usage-example.go
-          chmod +x examples/library-example
+          go build -o examples/library-example/library-example examples/library-example/main.go
+          chmod +x examples/library-example/library-example
           echo "✅ Both example binaries built successfully"
 
   docker:

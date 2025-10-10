@@ -34,7 +34,7 @@ Features:
 - Rollback capabilities
 - Force migration marking
 - Integration with existing Go projects`,
-	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+	PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 		// Skip configuration loading for version command
 		if cmd.Name() == "version" {
 			return nil
@@ -62,11 +62,12 @@ Features:
 			SetServerSelectionTimeout(time.Duration(cfg.Timeout) * time.Second).
 			SetConnectTimeout(time.Duration(cfg.Timeout) * time.Second)
 
-		if cfg.SSLEnabled {
-			clientOpts.SetTLSConfig(&tls.Config{
-				InsecureSkipVerify: cfg.SSLInsecure,
-			})
+	if cfg.SSLEnabled {
+		tlsConfig := &tls.Config{
+			InsecureSkipVerify: cfg.SSLInsecure, // #nosec G402 -- user-configurable for dev environments
 		}
+		clientOpts.SetTLSConfig(tlsConfig)
+	}
 
 		client, err := mongo.Connect(ctx, clientOpts)
 		if err != nil {
@@ -80,9 +81,7 @@ Features:
 		db = client.Database(cfg.Database)
 		engine = migration.NewEngine(db, cfg.MigrationsCollection)
 
-		if err := loadMigrations(); err != nil {
-			return fmt.Errorf("failed to load migrations: %w", err)
-		}
+		loadMigrations()
 
 		return nil
 	},
@@ -93,8 +92,14 @@ func Execute() error {
 	return rootCmd.Execute()
 }
 
-func init() {
+// SetupRootCommand initializes all command flags and subcommands.
+func SetupRootCommand() {
 	rootCmd.PersistentFlags().StringVar(&configFile, "config", "", "config file (default is .env)")
+
+	// Setup subcommands
+	setupDownCommand()
+	setupUpCommand()
+	setupMCPCommand()
 
 	// Add subcommands
 	rootCmd.AddCommand(upCmd)
@@ -103,17 +108,15 @@ func init() {
 	rootCmd.AddCommand(createCmd)
 	rootCmd.AddCommand(forceCmd)
 	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(mcpCmd)
 }
 
 // loadMigrations loads migration files from the migrations directory
-func loadMigrations() error {
+func loadMigrations() {
 	fmt.Printf("Looking for migrations in: %s\n", cfg.MigrationsPath)
 
 	// Check if migrations directory exists
 	if _, err := os.Stat(cfg.MigrationsPath); os.IsNotExist(err) {
 		fmt.Printf("Migrations directory does not exist: %s\n", cfg.MigrationsPath)
-		return nil
 	}
-
-	return nil
 }

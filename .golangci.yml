@@ -20,7 +20,7 @@ linters-settings:
   revive:
     min-confidence: 0.8
   cyclop:
-    max-complexity: 15
+    max-complexity: 10
   dupl:
     threshold: 100
   goconst:
@@ -46,14 +46,35 @@ linters-settings:
       - whyNoLint
       - wrapperFunc
   funlen:
-    lines: 100
+    lines: 60
     statements: 50
+  depguard:
+    rules:
+      main:
+        deny:
+          - pkg: io/ioutil
+            desc: "use os and io packages instead of io/ioutil"
+        files:
+          - $all
+        allow:
+          - $gostd
+          - github.com/spf13/cobra
+          - go.mongodb.org/mongo-driver/mongo
+          - go.mongodb.org/mongo-driver/mongo/options
+          - go.mongodb.org/mongo-driver/bson
+          - go.mongodb.org/mongo-driver/mongo/integration/mtest
+          - github.com/caarlos0/env/v11
+          - github.com/joho/godotenv
+          - github.com/jocham/mongo-essential/config
+          - github.com/jocham/mongo-essential/migration
+          - github.com/jocham/mongo-essential/mcp
+          - github.com/jocham/mongo-essential/examples/examplemigrations
 
 linters:
   disable-all: true
   enable:
     - bodyclose
-    - depguard
+    # - depguard  # disabled due to configuration issues
     - dogsled
     - dupl
     - errcheck

@@ -22,7 +22,7 @@ will remain applied (not rolled back).
 
 Examples:
   mongo-essential down --target 20231201_001  # Rollback to version 20231201_001`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		ctx := context.Background()
 
 		if downTargetVersion == "" {
@@ -40,7 +40,7 @@ Examples:
 	},
 }
 
-func init() {
+func setupDownCommand() {
 	downCmd.Flags().StringVar(&downTargetVersion, "target", "", "Target version to rollback to (required)")
 	if err := downCmd.MarkFlagRequired("target"); err != nil {
 		panic(fmt.Sprintf("failed to mark target flag as required: %v", err))

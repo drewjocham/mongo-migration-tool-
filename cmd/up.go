@@ -23,7 +23,7 @@ You can optionally specify a target version to migrate up to a specific version.
 Examples:
   mongo-essential up                    # Run all pending migrations
   mongo-essential up --target 20231201_002  # Run migrations up to specific version`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		ctx := context.Background()
 
 		if upTargetVersion != "" {
@@ -41,6 +41,6 @@ Examples:
 	},
 }
 
-func init() {
+func setupUpCommand() {
 	upCmd.Flags().StringVar(&upTargetVersion, "target", "", "Target version to migrate up to")
 }

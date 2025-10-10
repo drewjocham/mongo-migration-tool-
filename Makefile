@@ -68,10 +68,10 @@ test-coverage: ## Run tests with coverage
 test-examples: ## Test the examples
 	@echo "$(GREEN)Testing examples...$(NC)"
 	@go build -o examples/example examples/main.go
-	@go build -o examples/library-example examples/library-usage-example.go
+	@go build -o examples/library-example/library-example examples/library-example/main.go
 	@echo "✅ Examples build successfully!"
 	@echo "  - CLI example: examples/example"
-	@echo "  - Library example: examples/library-example"
+	@echo "  - Library example: examples/library-example/library-example"
 
 lint: ## Run golangci-lint
 	@echo "$(GREEN)Running linter...$(NC)"
