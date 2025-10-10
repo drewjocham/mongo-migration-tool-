@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// forceCmd represents the force command
 var forceCmd = &cobra.Command{
 	Use:   "force [version]",
 	Short: "Force mark a migration as applied without running it",
