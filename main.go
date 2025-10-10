@@ -16,6 +16,7 @@ var (
 
 func main() {
 	cmd.SetVersion(version, commit, date)
+	cmd.SetupRootCommand()
 
 	if err := cmd.Execute(); err != nil {
 		log.Printf("Error: %v", err)

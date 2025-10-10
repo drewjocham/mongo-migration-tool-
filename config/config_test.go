@@ -7,20 +7,20 @@ import (
 
 func TestLoad(t *testing.T) {
 	// Test with environment variables
-	os.Setenv("MONGO_URL", "mongodb://testhost:27017")
-	os.Setenv("MONGO_DATABASE", "testdb")
-	os.Setenv("MIGRATIONS_COLLECTION", "test_migrations")
-	os.Setenv("OPENAI_API_KEY", "test-key")
-	os.Setenv("GEMINI_API_KEY", "gemini-key")
-	os.Setenv("GOOGLE_DRIVE_FOLDER_ID", "folder-123")
+	_ = os.Setenv("MONGO_URL", "mongodb://testhost:27017")
+	_ = os.Setenv("MONGO_DATABASE", "testdb")
+	_ = os.Setenv("MIGRATIONS_COLLECTION", "test_migrations")
+	_ = os.Setenv("OPENAI_API_KEY", "test-key")
+	_ = os.Setenv("GEMINI_API_KEY", "gemini-key")
+	_ = os.Setenv("GOOGLE_DRIVE_FOLDER_ID", "folder-123")
 
 	defer func() {
-		os.Unsetenv("MONGO_URL")
-		os.Unsetenv("MONGO_DATABASE")
-		os.Unsetenv("MIGRATIONS_COLLECTION")
-		os.Unsetenv("OPENAI_API_KEY")
-		os.Unsetenv("GEMINI_API_KEY")
-		os.Unsetenv("GOOGLE_DRIVE_FOLDER_ID")
+		_ = os.Unsetenv("MONGO_URL")
+		_ = os.Unsetenv("MONGO_DATABASE")
+		_ = os.Unsetenv("MIGRATIONS_COLLECTION")
+		_ = os.Unsetenv("OPENAI_API_KEY")
+		_ = os.Unsetenv("GEMINI_API_KEY")
+		_ = os.Unsetenv("GOOGLE_DRIVE_FOLDER_ID")
 	}()
 
 	cfg, err := Load()
@@ -55,16 +55,16 @@ func TestLoad(t *testing.T) {
 
 func TestLoadDefaults(t *testing.T) {
 	// Clear all environment variables
-	os.Unsetenv("MONGO_URL")
-	os.Unsetenv("MONGO_DATABASE")
-	os.Unsetenv("MIGRATIONS_COLLECTION")
-	os.Unsetenv("OPENAI_API_KEY")
-	os.Unsetenv("GEMINI_API_KEY")
-	os.Unsetenv("GOOGLE_DRIVE_FOLDER_ID")
+	_ = os.Unsetenv("MONGO_URL")
+	_ = os.Unsetenv("MONGO_DATABASE")
+	_ = os.Unsetenv("MIGRATIONS_COLLECTION")
+	_ = os.Unsetenv("OPENAI_API_KEY")
+	_ = os.Unsetenv("GEMINI_API_KEY")
+	_ = os.Unsetenv("GOOGLE_DRIVE_FOLDER_ID")
 
 	// Set required database field
-	os.Setenv("MONGO_DATABASE", "test")
-	defer os.Unsetenv("MONGO_DATABASE")
+	_ = os.Setenv("MONGO_DATABASE", "test")
+	defer func() { _ = os.Unsetenv("MONGO_DATABASE") }()
 
 	cfg, err := Load()
 	if err != nil {

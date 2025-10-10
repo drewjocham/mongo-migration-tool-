@@ -1,8 +1,8 @@
 # mongo-essential
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/jocham/mongo-essential)](https://goreportcard.com/report/github.com/jocham/mongo-essential)
+[![Go Report Card](https://goreportcard.com/badge/github.com/jocham/mongo-essential)](https://goreportcard.com/report/github.com/drewjocham/mongo-essential)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Go Reference](https://pkg.go.dev/badge/github.com/jocham/mongo-essential.svg)](https://pkg.go.dev/github.com/jocham/mongo-essential)
+[![Go Reference](https://pkg.go.dev/badge/github.com/jocham/mongo-essential.svg)](https://pkg.go.dev/github.com/drewjocham/mongo-essential)
 
 A comprehensive MongoDB migration and database analysis tool with AI-powered insights. Think Liquibase/Flyway for MongoDB, plus intelligent database optimization recommendations.
 
@@ -48,7 +48,7 @@ mongo-essential version
 
 ```bash
 # Pull and run
-docker pull ghcr.io/jocham/mongo-essential:latest
+docker pull ghcr.io/drewjocham/mongo-essential:latest
 docker run --rm -v $(pwd):/workspace ghcr.io/jocham/mongo-essential:latest --help
 ```
 
@@ -56,17 +56,17 @@ docker run --rm -v $(pwd):/workspace ghcr.io/jocham/mongo-essential:latest --hel
 
 ```bash
 # Add to your Go project
-go get github.com/jocham/mongo-essential@latest
+go get github.com/drewjocham/mongo-essential@latest
 ```
 
 ### Binary Download
 
-Download pre-built binaries from [GitHub Releases](https://github.com/jocham/mongo-essential/releases) for Linux, macOS, Windows, and FreeBSD.
+Download pre-built binaries from [GitHub Releases](https://github.com/drewjocham/mongo-essential/releases) for Linux, macOS, Windows, and FreeBSD.
 
 ### Go Install (Development)
 
 ```bash
-go install github.com/jocham/mongo-essential@latest
+go install github.com/drewjocham/mongo-essential@latest
 ```
 
 **📚 For detailed installation instructions, platform-specific guides, and troubleshooting, see [INSTALL.md](INSTALL.md)**
@@ -188,8 +188,8 @@ import (
     "context"
     "log"
     
-    "github.com/jocham/mongo-essential/config"
-    "github.com/jocham/mongo-essential/migration"
+    "github.com/drewjocham/mongo-essential/config"
+    "github.com/drewjocham/mongo-essential/migration"
     "go.mongodb.org/mongo-driver/mongo"
     "go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -322,7 +322,7 @@ We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for de
 
 ```bash
 # Clone the repository
-git clone https://github.com/jocham/mongo-essential.git
+git clone https://github.com/drewjocham/mongo-essential.git
 cd mongo-essential
 
 # Install dependencies
@@ -360,11 +360,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🔗 Links & Resources
 
 ### Project Resources
-- **[Go Package Documentation](https://pkg.go.dev/github.com/jocham/mongo-essential)** - Complete API reference
-- **[GitHub Repository](https://github.com/jocham/mongo-essential)** - Source code and releases
-- **[Issue Tracker](https://github.com/jocham/mongo-essential/issues)** - Bug reports and feature requests
-- **[Homebrew Formula](https://github.com/jocham/homebrew-mongo-essential)** - Homebrew tap repository
-- **[Docker Images](https://ghcr.io/jocham/mongo-essential)** - Container registry
+- **[Go Package Documentation](https://pkg.go.dev/github.com/drewjocham/mongo-essential)** - Complete API reference
+- **[GitHub Repository](https://github.com/drewjocham/mongo-essential)** - Source code and releases
+- **[Issue Tracker](https://github.com/drewjocham/mongo-essential/issues)** - Bug reports and feature requests
+- **[Homebrew Formula](https://github.com/drewjocham/homebrew-mongo-essential)** - Homebrew tap repository
+- **[Docker Images](https://ghcr.io/drewjocham/mongo-essential)** - Container registry
 
 ### Documentation
 - **[Installation Guide](INSTALL.md)** - All installation methods and troubleshooting
@@ -375,9 +375,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🐛 Support & Community
 
-- 🐛 **Issues**: [GitHub Issues](https://github.com/jocham/mongo-essential/issues)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/jocham/mongo-essential/discussions)
-- 📧 **Contact**: [Project Maintainer](https://github.com/jocham)
+- 🐛 **Issues**: [GitHub Issues](https://github.com/drewjocham/mongo-essential/issues)
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/drewjocham/mongo-essential/discussions)
+- 📧 **Contact**: [Project Maintainer](https://github.com/drewjocham)
 - 📖 **Examples**: See the `examples/` directory in the repository
 
 ---

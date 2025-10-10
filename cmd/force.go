@@ -25,7 +25,7 @@ migration was actually applied correctly.
 Examples:
   mongo-migrate force 20231201_001   # Mark version 20231201_001 as applied`,
 	Args: cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, args []string) error {
 		version := args[0]
 		ctx := context.Background()
 

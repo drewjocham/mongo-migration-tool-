@@ -25,12 +25,12 @@ func (m *TestMigration) Description() string {
 	return m.description
 }
 
-func (m *TestMigration) Up(ctx context.Context, db *mongo.Database) error {
+func (m *TestMigration) Up(_ context.Context, _ *mongo.Database) error {
 	m.upExecuted = true
 	return nil
 }
 
-func (m *TestMigration) Down(ctx context.Context, db *mongo.Database) error {
+func (m *TestMigration) Down(_ context.Context, _ *mongo.Database) error {
 	m.downExecuted = true
 	return nil
 }

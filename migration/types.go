@@ -52,7 +52,7 @@ type Migration interface {
 //
 // This is used internally to track which migrations have been applied
 // and when they were executed.
-type MigrationRecord struct {
+type MigrationRecord struct { //nolint:revive // MigrationRecord is clearer than Record in this context
 	Version     string    `bson:"version"`
 	Description string    `bson:"description"`
 	AppliedAt   time.Time `bson:"applied_at"`
@@ -84,7 +84,7 @@ func (d Direction) String() string {
 // MigrationStatus represents the status of a migration.
 //
 // This shows whether a migration has been applied and when.
-type MigrationStatus struct {
+type MigrationStatus struct { //nolint:revive // MigrationStatus is clearer than Status in this context
 	Version     string     `json:"version"`
 	Description string     `json:"description"`
 	Applied     bool       `json:"applied"`

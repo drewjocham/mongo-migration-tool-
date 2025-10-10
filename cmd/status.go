@@ -23,11 +23,12 @@ This command shows:
 Examples:
   mongo-essential status
   mongo-essential status --verbose`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		ctx := context.Background()
 
 		fmt.Println("Migration Status")
-		fmt.Println(strings.Repeat("=", 50))
+		const separatorLength = 50
+		fmt.Println(strings.Repeat("=", separatorLength))
 
 		status, err := engine.GetStatus(ctx)
 		if err != nil {

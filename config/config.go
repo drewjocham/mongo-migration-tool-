@@ -114,34 +114,81 @@ func (c *Config) GetConnectionString() string {
 
 // Validate performs basic validation on the configuration.
 func (c *Config) Validate() error {
+	if err := c.validateDatabase(); err != nil {
+		return err
+	}
+
+	if err := c.validateAISettings(); err != nil {
+		return err
+	}
+
+	if err := c.validateGoogleDocsSettings(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// validateDatabase validates database configuration
+func (c *Config) validateDatabase() error {
 	if c.Database == "" {
 		return fmt.Errorf("MONGO_DATABASE is required")
 	}
+	return nil
+}
 
-	if c.AIEnabled {
-		switch c.AIProvider {
-		case "openai":
-			if c.OpenAIAPIKey == "" {
-				return fmt.Errorf("OPENAI_API_KEY is required when AI_PROVIDER is openai")
-			}
-		case "gemini":
-			if c.GeminiAPIKey == "" {
-				return fmt.Errorf("GEMINI_API_KEY is required when AI_PROVIDER is gemini")
-			}
-		case "claude":
-			if c.ClaudeAPIKey == "" {
-				return fmt.Errorf("CLAUDE_API_KEY is required when AI_PROVIDER is claude")
-			}
-		default:
-			return fmt.Errorf("invalid AI_PROVIDER: %s (must be openai, gemini, or claude)", c.AIProvider)
-		}
+// validateAISettings validates AI provider configuration
+func (c *Config) validateAISettings() error {
+	if !c.AIEnabled {
+		return nil
 	}
 
-	if c.GoogleDocsEnabled {
-		if c.GoogleCredentialsPath == "" && c.GoogleCredentialsJSON == "" {
-			return fmt.Errorf("either GOOGLE_CREDENTIALS_PATH or GOOGLE_CREDENTIALS_JSON is required when GOOGLE_DOCS_ENABLED is true")
-		}
+	switch c.AIProvider {
+	case "openai":
+		return c.validateOpenAIKey()
+	case "gemini":
+		return c.validateGeminiKey()
+	case "claude":
+		return c.validateClaudeKey()
+	default:
+		return fmt.Errorf("invalid AI_PROVIDER: %s (must be openai, gemini, or claude)", c.AIProvider)
+	}
+}
+
+// validateOpenAIKey validates OpenAI API key
+func (c *Config) validateOpenAIKey() error {
+	if c.OpenAIAPIKey == "" {
+		return fmt.Errorf("OPENAI_API_KEY is required when AI_PROVIDER is openai")
+	}
+	return nil
+}
+
+// validateGeminiKey validates Gemini API key
+func (c *Config) validateGeminiKey() error {
+	if c.GeminiAPIKey == "" {
+		return fmt.Errorf("GEMINI_API_KEY is required when AI_PROVIDER is gemini")
+	}
+	return nil
+}
+
+// validateClaudeKey validates Claude API key
+func (c *Config) validateClaudeKey() error {
+	if c.ClaudeAPIKey == "" {
+		return fmt.Errorf("CLAUDE_API_KEY is required when AI_PROVIDER is claude")
+	}
+	return nil
+}
+
+// validateGoogleDocsSettings validates Google Docs configuration
+func (c *Config) validateGoogleDocsSettings() error {
+	if !c.GoogleDocsEnabled {
+		return nil
 	}
 
+	if c.GoogleCredentialsPath == "" && c.GoogleCredentialsJSON == "" {
+		return fmt.Errorf(
+			"either GOOGLE_CREDENTIALS_PATH or GOOGLE_CREDENTIALS_JSON is required " +
+				"when GOOGLE_DOCS_ENABLED is true")
+	}
 	return nil
 }

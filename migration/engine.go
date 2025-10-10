@@ -2,7 +2,7 @@ package migration
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/sha256"
 	"fmt"
 	"sort"
 	"time"
@@ -211,7 +211,12 @@ func (e *Engine) getAppliedMigrations(ctx context.Context) ([]MigrationRecord, e
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(ctx)
+	defer func() {
+		if closeErr := cursor.Close(ctx); closeErr != nil {
+			// Log the error but don't override the main error
+			_ = closeErr
+		}
+	}()
 
 	var records []MigrationRecord
 	if err := cursor.All(ctx, &records); err != nil {
@@ -222,44 +227,68 @@ func (e *Engine) getAppliedMigrations(ctx context.Context) ([]MigrationRecord, e
 }
 
 // getMigrationsToExecute determines which migrations need to be executed
-func (e *Engine) getMigrationsToExecute(direction Direction, target string, appliedMap map[string]bool) ([]string, error) {
+func (e *Engine) getMigrationsToExecute(
+	direction Direction, target string, appliedMap map[string]bool,
+) ([]string, error) {
+	versions := e.getSortedVersions()
+
+	switch direction {
+	case DirectionUp:
+		return e.getMigrationsForUp(versions, target, appliedMap), nil
+	case DirectionDown:
+		return e.getMigrationsForDown(versions, target, appliedMap), nil
+	default:
+		return nil, fmt.Errorf("unknown direction: %v", direction)
+	}
+}
+
+// getSortedVersions returns all migration versions sorted alphabetically
+func (e *Engine) getSortedVersions() []string {
 	var versions []string
 	for version := range e.migrations {
 		versions = append(versions, version)
 	}
 	sort.Strings(versions)
+	return versions
+}
 
+// getMigrationsForUp gets migrations to execute for up direction
+func (e *Engine) getMigrationsForUp(versions []string, target string, appliedMap map[string]bool) []string {
 	var toExecute []string
-
-	switch direction {
-	case DirectionUp:
-		for _, version := range versions {
-			if !appliedMap[version] {
-				toExecute = append(toExecute, version)
-				if target != "" && version == target {
-					break
-				}
-			}
-		}
-
-	case DirectionDown:
-		for i := len(versions) - 1; i >= 0; i-- {
-			version := versions[i]
-			if appliedMap[version] {
-				if target != "" && version == target {
-					break
-				}
-				toExecute = append(toExecute, version)
+	for _, version := range versions {
+		if !appliedMap[version] {
+			toExecute = append(toExecute, version)
+			if e.shouldStopAtTarget(target, version) {
+				break
 			}
 		}
 	}
+	return toExecute
+}
 
-	return toExecute, nil
+// getMigrationsForDown gets migrations to execute for down direction
+func (e *Engine) getMigrationsForDown(versions []string, target string, appliedMap map[string]bool) []string {
+	var toExecute []string
+	for i := len(versions) - 1; i >= 0; i-- {
+		version := versions[i]
+		if appliedMap[version] {
+			if e.shouldStopAtTarget(target, version) {
+				break
+			}
+			toExecute = append(toExecute, version)
+		}
+	}
+	return toExecute
+}
+
+// shouldStopAtTarget determines if we should stop at the target version
+func (e *Engine) shouldStopAtTarget(target, currentVersion string) bool {
+	return target != "" && currentVersion == target
 }
 
 // calculateChecksum calculates a checksum for the migration
 func (e *Engine) calculateChecksum(migration Migration) string {
 	data := fmt.Sprintf("%s:%s", migration.Version(), migration.Description())
-	hash := md5.Sum([]byte(data))
+	hash := sha256.Sum256([]byte(data))
 	return fmt.Sprintf("%x", hash)
 }

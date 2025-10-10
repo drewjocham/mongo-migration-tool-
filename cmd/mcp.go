@@ -28,17 +28,20 @@ The server reads from stdin and writes to stdout using JSON-RPC protocol.`,
 
 var mcpWithExamples bool
 
-func init() {
+func setupMCPCommand() {
 	mcpCmd.Flags().BoolVar(&mcpWithExamples, "with-examples", false, "Register example migrations with the MCP server")
-	rootCmd.AddCommand(mcpCmd)
 }
 
-func runMCP(cmd *cobra.Command, args []string) {
+func runMCP(_ *cobra.Command, _ []string) {
 	server, err := mcp.NewMCPServer()
 	if err != nil {
 		log.Fatalf("Failed to create MCP server: %v", err)
 	}
-	defer server.Close()
+	defer func() {
+		if closeErr := server.Close(); closeErr != nil {
+			log.Printf("Error closing server: %v", closeErr)
+		}
+	}()
 
 	// Register example migrations if requested
 	if mcpWithExamples {
@@ -50,6 +53,6 @@ func runMCP(cmd *cobra.Command, args []string) {
 	}
 
 	if err := server.Start(); err != nil {
-		log.Fatalf("MCP server failed: %v", err)
+		log.Fatalf("MCP server failed: %v", err) //nolint:gocritic // exit is intended here
 	}
 }

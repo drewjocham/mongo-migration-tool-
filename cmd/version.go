@@ -25,7 +25,7 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number",
 	Long:  `Print the version number of mongo-essential.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		fmt.Printf("mongo-essential version %s\n", appVersion)
 		fmt.Printf("  commit: %s\n", appCommit)
 		fmt.Printf("  built: %s\n", appDate)
